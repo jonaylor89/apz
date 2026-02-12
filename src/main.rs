@@ -19,21 +19,32 @@ use crate::ui::UIState;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() != 2 {
-        eprintln!("Usage: {} <audio_file>", args[0]);
-        eprintln!("\nSupported formats: MP3, WAV, FLAC, OGG, AAC/M4A");
-        process::exit(1);
+    let mut enhanced_waveform = false;
+    let mut audio_path: Option<&String> = None;
+
+    for arg in args.iter().skip(1) {
+        if arg == "--visualizer" || arg == "-v" {
+            enhanced_waveform = true;
+        } else if !arg.starts_with('-') {
+            audio_path = Some(arg);
+        }
     }
 
-    let audio_path = &args[1];
+    let audio_path = audio_path.unwrap_or_else(|| {
+        eprintln!("Usage: {} [--visualizer|-v] <audio_file>", args[0]);
+        eprintln!("\nSupported formats: MP3, WAV, FLAC, OGG, AAC/M4A");
+        eprintln!("\nOptions:");
+        eprintln!("  --visualizer, -v    Enable enhanced waveform visualization");
+        process::exit(1);
+    });
 
-    let player = Player::new(audio_path).map_err(|e| {
+    let player = Player::new(audio_path, enhanced_waveform).map_err(|e| {
         eprintln!("Failed to load audio file: {}", e);
         process::exit(1);
     })?;
 
     let duration = player.duration();
-    let waveform = player.waveform().to_vec();
+    let waveform = player.waveform().clone();
     let mut ui_state = UIState::new(audio_path, duration, waveform);
 
     enable_raw_mode()?;

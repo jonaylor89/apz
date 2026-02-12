@@ -39,8 +39,10 @@ cargo build --release
 ## Usage
 
 ```bash
-./target/release/aud <audio_file>
+./target/release/aud [--visualizer|-v] <audio_file>
 ```
+
+Enable enhanced waveform visualization with `--visualizer` or `-v` flag.
 
 ## Supported Formats
 

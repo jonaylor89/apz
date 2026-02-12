@@ -9,6 +9,7 @@ use std::path::Path;
 use std::time::Duration;
 
 use crate::player::PlaybackState;
+use crate::waveform::WaveformData;
 
 pub struct UIState {
     pub filename: String,
@@ -16,11 +17,11 @@ pub struct UIState {
     pub duration: Duration,
     pub volume: f32,
     pub state: PlaybackState,
-    pub waveform: Vec<f32>,
+    pub waveform: WaveformData,
 }
 
 impl UIState {
-    pub fn new<P: AsRef<Path>>(path: P, duration: Duration, waveform: Vec<f32>) -> Self {
+    pub fn new<P: AsRef<Path>>(path: P, duration: Duration, waveform: WaveformData) -> Self {
         let filename = path
             .as_ref()
             .file_name()
@@ -42,13 +43,15 @@ impl UIState {
 pub fn render(frame: &mut Frame, state: &UIState) {
     let area = frame.area();
 
+    let waveform_height = if state.waveform.enhanced { 9 } else { 5 };
+
     let chunks = Layout::vertical([
-        Constraint::Length(3),  // Title
-        Constraint::Length(5),  // Waveform
-        Constraint::Length(3),  // Progress
-        Constraint::Length(3),  // Volume
-        Constraint::Min(0),     // Spacer
-        Constraint::Length(3),  // Controls
+        Constraint::Length(3),              // Title
+        Constraint::Length(waveform_height), // Waveform
+        Constraint::Length(3),              // Progress
+        Constraint::Length(3),              // Volume
+        Constraint::Min(0),                 // Spacer
+        Constraint::Length(3),              // Controls
     ])
     .split(area);
 
@@ -60,30 +63,33 @@ pub fn render(frame: &mut Frame, state: &UIState) {
 }
 
 fn render_waveform(frame: &mut Frame, area: Rect, state: &UIState) {
+    if state.waveform.enhanced {
+        render_enhanced_waveform(frame, area, state);
+    } else {
+        render_simple_waveform(frame, area, state);
+    }
+}
+
+fn render_simple_waveform(frame: &mut Frame, area: Rect, state: &UIState) {
     let width = area.width.saturating_sub(2) as usize;
-    let waveform_data: Vec<u64> = if state.waveform.len() >= width {
-        state.waveform[..width]
+    let waveform_data: Vec<u64> = if state.waveform.samples.len() >= width {
+        state.waveform.samples[..width]
             .iter()
             .map(|&v| (v * 100.0) as u64)
             .collect()
     } else {
-        let scale = width as f32 / state.waveform.len() as f32;
+        let scale = width as f32 / state.waveform.samples.len() as f32;
         (0..width)
             .map(|i| {
                 let idx = (i as f32 / scale) as usize;
-                if idx < state.waveform.len() {
-                    (state.waveform[idx] * 100.0) as u64
+                if idx < state.waveform.samples.len() {
+                    (state.waveform.samples[idx] * 100.0) as u64
                 } else {
                     0
                 }
             })
             .collect()
     };
-
-    let position_secs = state.position.as_secs();
-    let duration_secs = state.duration.as_secs().max(1);
-    let progress_ratio = position_secs as f64 / duration_secs as f64;
-    let _cursor_pos = (progress_ratio * width as f64) as usize;
 
     let waveform_color = match state.state {
         PlaybackState::Playing => Color::Cyan,
@@ -96,6 +102,76 @@ fn render_waveform(frame: &mut Frame, area: Rect, state: &UIState) {
         .style(Style::default().fg(waveform_color));
 
     frame.render_widget(sparkline, area);
+}
+
+fn render_enhanced_waveform(frame: &mut Frame, area: Rect, state: &UIState) {
+    let waveform_color = match state.state {
+        PlaybackState::Playing => Color::Cyan,
+        PlaybackState::Paused => Color::Yellow,
+    };
+
+    let position_secs = state.position.as_secs();
+    let duration_secs = state.duration.as_secs().max(1);
+    let progress_ratio = position_secs as f64 / duration_secs as f64;
+
+    let block = Block::default().borders(Borders::ALL).title("Waveform");
+    let inner = block.inner(area);
+    frame.render_widget(block, area);
+
+    let width = inner.width as usize;
+    let height = inner.height as usize;
+    let center = height / 2;
+
+    let waveform_data: Vec<f32> = if state.waveform.samples.len() >= width {
+        state.waveform.samples[..width].to_vec()
+    } else {
+        let scale = width as f32 / state.waveform.samples.len() as f32;
+        (0..width)
+            .map(|i| {
+                let idx = (i as f32 / scale) as usize;
+                if idx < state.waveform.samples.len() {
+                    state.waveform.samples[idx]
+                } else {
+                    0.0
+                }
+            })
+            .collect()
+    };
+
+    let cursor_pos = (progress_ratio * width as f64) as usize;
+
+    for (x, &amplitude) in waveform_data.iter().enumerate() {
+        let bar_height = (amplitude * center as f32) as usize;
+        let color = if x <= cursor_pos {
+            waveform_color
+        } else {
+            Color::DarkGray
+        };
+
+        for y in 0..bar_height.min(center) {
+            let top_y = center.saturating_sub(y + 1);
+            let bottom_y = center + y;
+
+            if top_y < height {
+                let cell = &mut frame.buffer_mut()[(inner.x + x as u16, inner.y + top_y as u16)];
+                cell.set_symbol("█");
+                cell.set_fg(color);
+            }
+            if bottom_y < height {
+                let cell = &mut frame.buffer_mut()[(inner.x + x as u16, inner.y + bottom_y as u16)];
+                cell.set_symbol("█");
+                cell.set_fg(color);
+            }
+        }
+    }
+
+    if center < height {
+        for x in 0..width {
+            let cell = &mut frame.buffer_mut()[(inner.x + x as u16, inner.y + center as u16)];
+            cell.set_symbol("─");
+            cell.set_fg(Color::DarkGray);
+        }
+    }
 }
 
 fn render_title(frame: &mut Frame, area: Rect, state: &UIState) {

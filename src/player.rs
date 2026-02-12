@@ -5,7 +5,7 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use crate::waveform;
+use crate::waveform::{self, WaveformData};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PlaybackState {
@@ -18,11 +18,11 @@ pub struct Player {
     sink: Arc<Sink>,
     state: Arc<Mutex<PlaybackState>>,
     duration: Duration,
-    waveform: Vec<f32>,
+    waveform: WaveformData,
 }
 
 impl Player {
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new<P: AsRef<Path>>(path: P, enhanced_waveform: bool) -> Result<Self, Box<dyn std::error::Error>> {
         let (_stream, stream_handle) = OutputStream::try_default()?;
         let sink = Sink::try_new(&stream_handle)?;
 
@@ -34,7 +34,8 @@ impl Player {
         sink.append(source);
         sink.pause();
 
-        let waveform = waveform::generate_waveform(&path, 100).unwrap_or_else(|_| vec![0.0; 100]);
+        let waveform = waveform::generate_waveform(&path, 100, enhanced_waveform)
+            .unwrap_or_else(|_| WaveformData::new(vec![0.0; 100], false));
 
         Ok(Player {
             _stream,
@@ -102,7 +103,7 @@ impl Player {
         self.sink.empty()
     }
 
-    pub fn waveform(&self) -> &[f32] {
+    pub fn waveform(&self) -> &WaveformData {
         &self.waveform
     }
 }

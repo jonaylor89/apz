@@ -3,10 +3,32 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
+#[derive(Clone)]
+pub struct WaveformData {
+    pub samples: Vec<f32>,
+    pub enhanced: bool,
+}
+
+impl WaveformData {
+    pub fn new(samples: Vec<f32>, enhanced: bool) -> Self {
+        Self { samples, enhanced }
+    }
+}
+
 pub fn generate_waveform<P: AsRef<Path>>(
     path: P,
     target_width: usize,
-) -> Result<Vec<f32>, Box<dyn std::error::Error>> {
+    enhanced: bool,
+) -> Result<WaveformData, Box<dyn std::error::Error>> {
+    let width = if enhanced { target_width * 2 } else { target_width };
+    generate_waveform_internal(path, width, enhanced)
+}
+
+fn generate_waveform_internal<P: AsRef<Path>>(
+    path: P,
+    target_width: usize,
+    enhanced: bool,
+) -> Result<WaveformData, Box<dyn std::error::Error>> {
     let file = File::open(path)?;
     let source = Decoder::new(BufReader::new(file))?;
 
@@ -14,7 +36,7 @@ pub fn generate_waveform<P: AsRef<Path>>(
     let samples: Vec<i16> = source.convert_samples().collect();
 
     if samples.is_empty() {
-        return Ok(vec![0.0; target_width]);
+        return Ok(WaveformData::new(vec![0.0; target_width], enhanced));
     }
 
     let total_samples = samples.len() / channels as usize;
@@ -48,7 +70,7 @@ pub fn generate_waveform<P: AsRef<Path>>(
 
     normalize_waveform(&mut waveform);
 
-    Ok(waveform)
+    Ok(WaveformData::new(waveform, enhanced))
 }
 
 fn normalize_waveform(waveform: &mut [f32]) {
