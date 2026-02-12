@@ -1,0 +1,10 @@
+[package]
+name = "aud"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rodio = "0.19"
+symphonia = "0.5"
+ratatui = "0.29"
+crossterm = "0.28"
