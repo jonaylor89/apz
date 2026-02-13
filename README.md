@@ -42,7 +42,7 @@ cargo build --release
 ./target/release/aud [--visualizer|-v] <audio_file>
 ```
 
-Enable enhanced waveform visualization with `--visualizer` or `-v` flag.
+Use `--visualizer` or `-v` to enable live spectrum analyzer with frequency bars.
 
 ## Supported Formats
 

@@ -2,6 +2,8 @@ mod player;
 mod ui;
 mod controls;
 mod waveform;
+mod spectrum;
+mod tee_source;
 
 use crossterm::{
     execute,
@@ -19,12 +21,12 @@ use crate::ui::UIState;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
 
-    let mut enhanced_waveform = false;
+    let mut use_spectrum = false;
     let mut audio_path: Option<&String> = None;
 
     for arg in args.iter().skip(1) {
         if arg == "--visualizer" || arg == "-v" {
-            enhanced_waveform = true;
+            use_spectrum = true;
         } else if !arg.starts_with('-') {
             audio_path = Some(arg);
         }
@@ -34,18 +36,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         eprintln!("Usage: {} [--visualizer|-v] <audio_file>", args[0]);
         eprintln!("\nSupported formats: MP3, WAV, FLAC, OGG, AAC/M4A");
         eprintln!("\nOptions:");
-        eprintln!("  --visualizer, -v    Enable enhanced waveform visualization");
+        eprintln!("  --visualizer, -v    Enable live spectrum analyzer bars");
         process::exit(1);
     });
 
-    let player = Player::new(audio_path, enhanced_waveform).map_err(|e| {
+    let player = Player::new(audio_path, false, use_spectrum).map_err(|e| {
         eprintln!("Failed to load audio file: {}", e);
         process::exit(1);
     })?;
 
     let duration = player.duration();
     let waveform = player.waveform().clone();
-    let mut ui_state = UIState::new(audio_path, duration, waveform);
+    let spectrum = player.spectrum();
+    let mut ui_state = UIState::new(audio_path, duration, waveform, spectrum);
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();

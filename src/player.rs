@@ -5,6 +5,8 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use crate::spectrum::SpectrumAnalyzer;
+use crate::tee_source::TeeSource;
 use crate::waveform::{self, WaveformData};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -19,10 +21,15 @@ pub struct Player {
     state: Arc<Mutex<PlaybackState>>,
     duration: Duration,
     waveform: WaveformData,
+    spectrum: Option<Arc<Mutex<SpectrumAnalyzer>>>,
 }
 
 impl Player {
-    pub fn new<P: AsRef<Path>>(path: P, enhanced_waveform: bool) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new<P: AsRef<Path>>(
+        path: P,
+        enhanced_waveform: bool,
+        use_spectrum: bool,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let (_stream, stream_handle) = OutputStream::try_default()?;
         let sink = Sink::try_new(&stream_handle)?;
 
@@ -31,7 +38,17 @@ impl Player {
 
         let duration = source.total_duration().unwrap_or(Duration::from_secs(0));
 
-        sink.append(source);
+        let spectrum = if use_spectrum {
+            let analyzer = Arc::new(Mutex::new(SpectrumAnalyzer::new()));
+            let sample_buffer = analyzer.lock().unwrap().get_sample_buffer();
+            let tee_source = TeeSource::new(source.convert_samples(), sample_buffer);
+            sink.append(tee_source);
+            Some(analyzer)
+        } else {
+            sink.append(source);
+            None
+        };
+
         sink.pause();
 
         let waveform = waveform::generate_waveform(&path, 100, enhanced_waveform)
@@ -43,6 +60,7 @@ impl Player {
             state: Arc::new(Mutex::new(PlaybackState::Paused)),
             duration,
             waveform,
+            spectrum,
         })
     }
 
@@ -105,5 +123,9 @@ impl Player {
 
     pub fn waveform(&self) -> &WaveformData {
         &self.waveform
+    }
+
+    pub fn spectrum(&self) -> Option<Arc<Mutex<SpectrumAnalyzer>>> {
+        self.spectrum.as_ref().map(Arc::clone)
     }
 }
