@@ -1,7 +1,14 @@
 [package]
-name = "aud"
+name = "apz"
 version = "0.1.0"
 edition = "2024"
+description = "Minimal terminal audio player with live spectrum analyzer"
+authors = ["Johannes <me@jonaylor.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/jonaylor89/apz"
+keywords = ["audio", "player", "terminal", "spectrum", "visualizer"]
+categories = ["command-line-utilities", "multimedia::audio"]
 
 [dependencies]
 rodio = "0.19"

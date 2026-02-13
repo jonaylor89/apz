@@ -284,7 +284,7 @@ fn render_title(frame: &mut Frame, area: Rect, state: &UIState) {
         Block::default()
             .borders(Borders::ALL)
             .title(Span::styled(
-                "aud",
+                "apz",
                 Style::default()
                     .fg(Color::Magenta)
                     .add_modifier(Modifier::BOLD),

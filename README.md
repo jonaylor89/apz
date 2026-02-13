@@ -1,9 +1,9 @@
-# aud
+# apz
 
-Terminal audio player for engineers.
+Minimal terminal audio player with live spectrum analyzer.
 
 ```
-┌aud──────────────────────────────────────────────────────────────────────┐
+┌apz──────────────────────────────────────────────────────────────────────┐
 │⏸ sample8.mp3                                                            │
 └─────────────────────────────────────────────────────────────────────────┘
 ┌Waveform─────────────────────────────────────────────────────────────────┐
@@ -39,7 +39,7 @@ cargo build --release
 ## Usage
 
 ```bash
-./target/release/aud [OPTIONS] <audio_file>
+./target/release/apz [OPTIONS] <audio_file>
 ```
 
 ## Options
@@ -58,16 +58,16 @@ cargo build --release
 
 ```bash
 # Basic playback
-./target/release/aud song.mp3
+./target/release/apz song.mp3
 
 # With visualizer
-./target/release/aud --visualizer song.mp3
+./target/release/apz --visualizer song.mp3
 
 # Custom visualizer settings
-./target/release/aud --visualizer --bars 50 --bass-boost 2.0 song.mp3
+./target/release/apz --visualizer --bars 50 --bass-boost 2.0 song.mp3
 
 # Custom seek/volume steps
-./target/release/aud --seek-step 10 --volume-step 0.1 song.mp3
+./target/release/apz --seek-step 10 --volume-step 0.1 song.mp3
 ```
 
 ## Supported Formats
