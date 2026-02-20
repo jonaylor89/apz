@@ -1,6 +1,6 @@
 [package]
 name = "apz"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2024"
 description = "Minimal terminal audio player with live spectrum analyzer"
 authors = ["Johannes <me@jonaylor.com>"]
