@@ -47,7 +47,8 @@ impl SpectrumAnalyzer {
             .collect();
 
         for (i, bar) in self.bars.iter_mut().enumerate() {
-            let freq_index = ((i as f32 / self.num_bars as f32).powf(1.3) * (spectrum.len() - 1) as f32) as usize;
+            let freq_index = ((i as f32 / self.num_bars as f32).powf(1.3)
+                * (spectrum.len() - 1) as f32) as usize;
             let freq_index = freq_index.min(spectrum.len() - 1);
 
             let bass_factor = self.bass_boost * (1.0 - i as f32 / self.num_bars as f32);

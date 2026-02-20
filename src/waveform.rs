@@ -20,7 +20,11 @@ pub fn generate_waveform<P: AsRef<Path>>(
     target_width: usize,
     enhanced: bool,
 ) -> Result<WaveformData, Box<dyn std::error::Error>> {
-    let width = if enhanced { target_width * 2 } else { target_width };
+    let width = if enhanced {
+        target_width * 2
+    } else {
+        target_width
+    };
     generate_waveform_internal(path, width, enhanced)
 }
 

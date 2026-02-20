@@ -1,9 +1,9 @@
 use ratatui::{
+    Frame,
     layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Gauge, Paragraph, Sparkline},
-    Frame,
 };
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -61,12 +61,12 @@ pub fn render(frame: &mut Frame, state: &UIState) {
     };
 
     let chunks = Layout::vertical([
-        Constraint::Length(3),        // Title
+        Constraint::Length(3),          // Title
         Constraint::Length(viz_height), // Waveform/Spectrum
-        Constraint::Length(3),        // Progress
-        Constraint::Length(3),        // Volume
-        Constraint::Min(0),           // Spacer
-        Constraint::Length(3),        // Controls
+        Constraint::Length(3),          // Progress
+        Constraint::Length(3),          // Volume
+        Constraint::Min(0),             // Spacer
+        Constraint::Length(3),          // Controls
     ])
     .split(area);
 
@@ -272,23 +272,25 @@ fn render_title(frame: &mut Frame, area: Rect, state: &UIState) {
     let title = Paragraph::new(Line::from(vec![
         Span::styled(
             status_symbol,
-            Style::default().fg(status_color).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(status_color)
+                .add_modifier(Modifier::BOLD),
         ),
         Span::raw(" "),
         Span::styled(
             &state.filename,
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         ),
     ]))
     .block(
-        Block::default()
-            .borders(Borders::ALL)
-            .title(Span::styled(
-                "apz",
-                Style::default()
-                    .fg(Color::Magenta)
-                    .add_modifier(Modifier::BOLD),
-            )),
+        Block::default().borders(Borders::ALL).title(Span::styled(
+            "apz",
+            Style::default()
+                .fg(Color::Magenta)
+                .add_modifier(Modifier::BOLD),
+        )),
     );
 
     frame.render_widget(title, area);
@@ -336,17 +338,42 @@ fn render_volume(frame: &mut Frame, area: Rect, state: &UIState) {
 fn render_controls(frame: &mut Frame, area: Rect) {
     let controls = Paragraph::new(vec![
         Line::from(vec![
-            Span::styled("[Space]", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "[Space]",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(" play/pause  "),
-            Span::styled("[Q]", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "[Q]",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(" quit  "),
-            Span::styled("[R]", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "[R]",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(" restart"),
         ]),
         Line::from(vec![
-            Span::styled("[←/→]", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "[←/→]",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(" seek ±5s  "),
-            Span::styled("[↑/↓]", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "[↑/↓]",
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(" volume ±5%"),
         ]),
     ])

@@ -1,21 +1,21 @@
-mod player;
-mod ui;
+mod config;
 mod controls;
-mod waveform;
+mod player;
 mod spectrum;
 mod tee_source;
-mod config;
+mod ui;
+mod waveform;
 
 use crossterm::{
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use ratatui::{backend::CrosstermBackend, Terminal};
+use ratatui::{Terminal, backend::CrosstermBackend};
 use std::io;
 use std::process;
 
 use crate::config::Config;
-use crate::controls::{handle_input, ControlAction};
+use crate::controls::{ControlAction, handle_input};
 use crate::player::Player;
 use crate::ui::UIState;
 

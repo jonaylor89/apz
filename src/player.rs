@@ -43,7 +43,9 @@ impl Player {
         let duration = source.total_duration().unwrap_or(Duration::from_secs(0));
 
         let spectrum = if let Some((num_bars, smoothing, bass_boost)) = spectrum_config {
-            let analyzer = Arc::new(Mutex::new(SpectrumAnalyzer::new(num_bars, smoothing, bass_boost)));
+            let analyzer = Arc::new(Mutex::new(SpectrumAnalyzer::new(
+                num_bars, smoothing, bass_boost,
+            )));
             let sample_buffer = analyzer.lock().unwrap().get_sample_buffer();
             let tee_source = TeeSource::new(source.convert_samples(), sample_buffer);
             sink.append(tee_source);

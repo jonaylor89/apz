@@ -7,8 +7,20 @@ authors = ["Johannes <me@jonaylor.com>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/jonaylor89/apz"
+homepage = "https://github.com/jonaylor89/apz"
 keywords = ["audio", "player", "terminal", "spectrum", "visualizer"]
 categories = ["command-line-utilities", "multimedia::audio"]
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }.{ archive-format }"
+bin-dir = "{ bin }{ binary-ext }"
+pkg-fmt = "tgz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-fmt = "zip"
+
+[package.metadata.binstall.overrides.aarch64-pc-windows-msvc]
+pkg-fmt = "zip"
 
 [dependencies]
 rodio = "0.19"
