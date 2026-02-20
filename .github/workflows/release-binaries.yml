@@ -15,8 +15,6 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-          - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
           - target: x86_64-apple-darwin
@@ -29,11 +27,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install ALSA dependencies (Linux)
+      - name: Install ALSA dependencies (Linux host)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libasound2-dev
+          sudo apt-get install -y libasound2-dev pkg-config
+
+      - name: Install ALSA cross-dependencies (Linux aarch64)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo dpkg --add-architecture arm64
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev:arm64
+
+      - name: Setup cross-toolchain
+        if: matrix.os == 'ubuntu-latest' && matrix.target != 'x86_64-unknown-linux-gnu'
+        uses: taiki-e/setup-cross-toolchain-action@v1
+        with:
+          target: ${{ matrix.target }}
 
       - name: Upload binaries to release
         uses: taiki-e/upload-rust-binary-action@v1
@@ -42,3 +53,5 @@ jobs:
           target: ${{ matrix.target }}
           include: LICENSE,README.md
           token: ${{ secrets.GITHUB_TOKEN }}
+          # Use the host toolchain set up by setup-cross-toolchain-action
+          cross: false
